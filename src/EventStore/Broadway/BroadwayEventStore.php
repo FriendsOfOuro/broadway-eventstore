@@ -11,6 +11,7 @@ use Broadway\EventStore\EventStreamNotFoundException;
 use EventStore\EventStoreInterface;
 use EventStore\Exception\StreamNotFoundException;
 use EventStore\Exception\WrongExpectedVersionException;
+use EventStore\StreamFeed\Entry;
 use EventStore\StreamFeed\LinkRelation;
 use EventStore\WritableEvent;
 use EventStore\WritableEventCollection;
@@ -38,21 +39,22 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
             throw new EventStreamNotFoundException($e->getMessage());
         }
 
-        $feed = $this
-            ->eventStore
-            ->navigateStreamFeed(
-                $feed,
-                LinkRelation::FIRST()
-            )
-        ;
+        if ($feed->hasLink(LinkRelation::LAST())) {
+            $feed = $this->eventStore->navigateStreamFeed($feed, LinkRelation::LAST());
+        } else {
+            $feed = $this->eventStore->navigateStreamFeed($feed, LinkRelation::FIRST());
+        }
 
-        $rel = LinkRelation::NEXT();
+        $rel = LinkRelation::PREVIOUS();
 
         $messages = [];
 
         $i = 0;
         while ($feed !== null) {
-            foreach ($feed->getEntries() as $entry) {
+            /** @var Entry[] $entries */
+            $entries = array_reverse($feed->getEntries());
+
+            foreach ($entries as $entry) {
                 $event = $this
                     ->eventStore
                     ->readEvent($entry->getEventUrl()

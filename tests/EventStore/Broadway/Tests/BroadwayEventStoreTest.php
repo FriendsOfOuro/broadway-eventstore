@@ -82,6 +82,31 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     */
+    public function streams_are_loaded_in_the_right_order()
+    {
+        $id = (string) new UUID;
+        $dateTime = DateTime::fromString('2014-03-12T14:17:19.176169+00:00');
+
+        $events = [];
+        // the eventstore paginates results with 20 events per page
+        for ($i = 0; $i <= 22; $i++) {
+            $events[] = $this->createDomainMessage($id, $i, $dateTime, 'event-' . $i);
+        }
+
+        $events = new DomainEventStream($events);
+        $this->eventStore->append($id, $events);
+
+        $events = $this->eventStore->load($id);
+        $eventIterator = $events->getIterator();
+        $firstMessage = $eventIterator->current();
+
+        $this->assertCount(23, $eventIterator);
+        $this->assertEquals('event-0', $firstMessage->getPayload()->title);
+    }
+
+    /**
+     * @test
      * @expectedException Broadway\EventStore\EventStreamNotFoundException
      */
     public function it_should_throw_an_exception_when_requesting_the_stream_of_a_non_existing_aggregate()
@@ -105,21 +130,37 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
         $this->eventStore->append($id, $appendedEventStream);
     }
 
-    private function createDomainMessage($id, $playhead, $recordedOn = null)
+    private function createDomainMessage($id, $playhead, $recordedOn = null, $title = '')
     {
-        return new DomainMessage($id, $playhead, new MetaData([]), new Event(), $recordedOn ? $recordedOn : DateTime::now());
+        return new DomainMessage($id, $playhead, new MetaData([]), new Event($title), $recordedOn ? $recordedOn : DateTime::now());
     }
 }
 
 class Event implements SerializableInterface
 {
+
+    /**
+     * @var string
+     */
+    public $title;
+
+    /**
+     * @param string $title
+     */
+    public function __construct($title)
+    {
+        $this->title = $title;
+    }
+
     public static function deserialize(array $data)
     {
-        return new Event();
+        return new Event($data['title']);
     }
 
     public function serialize()
     {
-        return [];
+        return [
+            'title' => $this->title
+        ];
     }
 }
