@@ -101,7 +101,7 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
         $eventIterator = $events->getIterator();
         $firstMessage = $eventIterator->current();
 
-        $this->assertCount(23, $eventIterator);
+        $this->assertEquals(23, iterator_count($eventIterator));
         $this->assertEquals('event-0', $firstMessage->getPayload()->title);
     }
 
