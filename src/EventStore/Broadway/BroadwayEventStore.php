@@ -51,14 +51,13 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
 
         $i = 0;
         while ($feed !== null) {
-            /** @var Entry[] $entries */
-            $entries = array_reverse($feed->getEntries());
-
-            foreach ($entries as $entry) {
+            foreach ($this->sortEntries($feed->getEntries()) as $entry) {
                 $event = $this
                     ->eventStore
-                    ->readEvent($entry->getEventUrl()
-                );
+                    ->readEvent(
+                        $entry->getEventUrl()
+                    )
+                ;
 
                 $data = $event->getData();
                 $recordedOn = DateTime::fromString($data['broadway_recorded_on']);
@@ -66,7 +65,7 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
 
                 $messages[] = new DomainMessage(
                     $id,
-                    $i++,
+                    $this->getVersion($entry),
                     new MetaData([]),
                     call_user_func(
                         [
@@ -131,5 +130,28 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
         } catch (WrongExpectedVersionException $e) {
             throw new BroadwayOptimisticLockException($e->getMessage());
         }
+    }
+
+    /**
+     * @param  Entry[] $entries
+     * @return Entry[]
+     */
+    private function sortEntries(array $entries)
+    {
+        usort(
+            $entries,
+            function ($a, $b) {
+                return $this->getVersion($a) - $this->getVersion($b);
+            }
+        );
+
+        return $entries;
+    }
+
+    private function getVersion(Entry $entry)
+    {
+        $parts = explode('/', $entry->getEventUrl());
+
+        return (int) array_pop($parts);
     }
 }
