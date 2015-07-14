@@ -65,11 +65,11 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
 
                 $messages[] = new DomainMessage(
                     $id,
-                    $entry->getVersion(),
+                    $event->getVersion(),
                     new MetaData([]),
                     call_user_func(
                         [
-                            $entry->getType(),
+                            $event->getType(),
                             'deserialize'
                         ],
                         $data
@@ -141,10 +141,17 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
         usort(
             $entries,
             function ($a, $b) {
-                return $a->getVersion() - $b->getVersion();
+                return $this->getVersion($a) - $this->getVersion($b);
             }
         );
 
         return $entries;
+    }
+
+    private function getVersion(Entry $entry)
+    {
+        $parts = explode('/', $entry->getEventUrl());
+
+        return (int) array_pop($parts);
     }
 }
