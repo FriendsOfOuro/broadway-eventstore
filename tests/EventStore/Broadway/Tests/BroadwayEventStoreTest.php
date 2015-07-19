@@ -107,6 +107,27 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
+     */
+    public function metadata_is_saved_properly()
+    {
+        $id = (string) new UUID;
+        $dateTime = DateTime::fromString('2014-03-12T14:17:19.176169+00:00');
+        $metadata = ['foo' => 'bar'];
+
+        $events = [$this->createDomainMessageWithMetadata($id, 0, $metadata, $dateTime, 'event-42')];
+
+        $events = new DomainEventStream($events);
+        $this->eventStore->append($id, $events);
+
+        $events = $this->eventStore->load($id);
+        $eventIterator = $events->getIterator();
+        $firstMessage = $eventIterator->current();
+
+        $this->assertEquals($metadata, $firstMessage->getMetadata()->serialize());
+    }
+
+    /**
+     * @test
      * @expectedException Broadway\EventStore\EventStreamNotFoundException
      */
     public function it_should_throw_an_exception_when_requesting_the_stream_of_a_non_existing_aggregate()
@@ -132,7 +153,12 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
 
     private function createDomainMessage($id, $playhead, $recordedOn = null, $title = '')
     {
-        return new DomainMessage($id, $playhead, new MetaData([]), new Event($title), $recordedOn ? $recordedOn : DateTime::now());
+        return new DomainMessage($id, $playhead, new Metadata([]), new Event($title), $recordedOn ? $recordedOn : DateTime::now());
+    }
+
+    private function createDomainMessageWithMetadata($id, $playhead, array $metadata, $recordedOn = null, $title = '')
+    {
+        return new DomainMessage($id, $playhead, new Metadata($metadata), new Event($title), $recordedOn ? $recordedOn : DateTime::now());
     }
 }
 

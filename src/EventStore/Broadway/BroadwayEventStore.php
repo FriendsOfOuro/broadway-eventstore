@@ -66,7 +66,7 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
                 $messages[] = new DomainMessage(
                     $id,
                     $event->getVersion(),
-                    new Metadata([]),
+                    new Metadata($event->getMetadata() ?: []),
                     call_user_func(
                         [
                             $event->getType(),
@@ -114,7 +114,10 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
                             ->getRecordedOn()
                             ->toString()
                     ]
-                )
+                ),
+                $message
+                    ->getMetadata()
+                    ->serialize()
             );
         }
 
