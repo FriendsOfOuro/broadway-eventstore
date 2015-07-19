@@ -66,7 +66,7 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
                 $messages[] = new DomainMessage(
                     $id,
                     $event->getVersion(),
-                    new MetaData([]),
+                    new Metadata([]),
                     call_user_func(
                         [
                             $event->getType(),
