@@ -121,6 +121,10 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
             );
         }
 
+        if (empty($events)) {
+            return;
+        }
+
         try {
             $this
                 ->eventStore

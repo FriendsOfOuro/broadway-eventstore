@@ -43,6 +43,22 @@ class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * This not makes much sense but it's the way DBALEventStore behave
+     *
+     * @test
+     * @expectedException Broadway\EventStore\EventStreamNotFoundException
+     */
+    public function it_should_do_handle_empty_stream()
+    {
+        $id = (string) new UUID;
+        $domainEventStream = new DomainEventStream([
+        ]);
+
+        $this->eventStore->append($id, $domainEventStream);
+        $this->eventStore->load($id);
+    }
+
+    /**
      * @test
      */
     public function it_should_append_to_an_already_existing_stream()
