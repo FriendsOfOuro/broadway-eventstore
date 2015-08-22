@@ -12,7 +12,6 @@ use EventStore\EventStoreInterface;
 use EventStore\Exception\StreamNotFoundException;
 use EventStore\Exception\WrongExpectedVersionException;
 use EventStore\StreamFeed\Entry;
-use EventStore\StreamFeed\LinkRelation;
 use EventStore\WritableEvent;
 use EventStore\WritableEventCollection;
 
@@ -30,34 +29,18 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
      */
     public function load($id)
     {
-        try {
-            $feed = $this
-                ->eventStore
-                ->openStreamFeed($id)
-            ;
-        } catch (StreamNotFoundException $e) {
-            throw new EventStreamNotFoundException($e->getMessage());
-        }
-
-        if ($feed->hasLink(LinkRelation::LAST())) {
-            $feed = $this->eventStore->navigateStreamFeed($feed, LinkRelation::LAST());
-        } else {
-            $feed = $this->eventStore->navigateStreamFeed($feed, LinkRelation::FIRST());
-        }
-
-        $rel = LinkRelation::PREVIOUS();
+        $iterator = $this
+            ->eventStore
+            ->forwardStreamFeedIterator($id)
+        ;
 
         $messages = [];
 
         $i = 0;
-        while ($feed !== null) {
-            foreach ($this->sortEntries($feed->getEntries()) as $entry) {
-                $event = $this
-                    ->eventStore
-                    ->readEvent(
-                        $entry->getEventUrl()
-                    )
-                ;
+
+        try {
+            foreach ($iterator as $entryWithEvent) {
+                $event = $entryWithEvent->getEvent();
 
                 $data = $event->getData();
                 $recordedOn = DateTime::fromString($data['broadway_recorded_on']);
@@ -77,14 +60,8 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
                     $recordedOn
                 );
             }
-
-            $feed = $this
-                ->eventStore
-                ->navigateStreamFeed(
-                    $feed,
-                    $rel
-                )
-            ;
+        } catch (StreamNotFoundException $e) {
+            throw new EventStreamNotFoundException($e->getMessage());
         }
 
         return new DomainEventStream($messages);

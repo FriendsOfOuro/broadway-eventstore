@@ -27,7 +27,7 @@
     ],
     "require": {
         "php": ">5.4.0",
-        "dbellettini/eventstore-client": "~0.3",
+        "dbellettini/eventstore-client": "~0.6",
         "broadway/broadway": "~0.1"
     },
     "require-dev": {

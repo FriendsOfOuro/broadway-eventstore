@@ -8,7 +8,7 @@ use Broadway\Domain\Metadata;
 use Broadway\Serializer\SerializableInterface;
 use EventStore\Broadway\BroadwayEventStore;
 use EventStore\EventStore;
-use ValueObjects\Identity\UUID;
+use EventStore\ValueObjects\Identity\UUID;
 
 class BroadwayEventStoreTest extends \PHPUnit_Framework_TestCase
 {
