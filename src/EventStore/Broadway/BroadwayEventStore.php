@@ -36,8 +36,6 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
 
         $messages = [];
 
-        $i = 0;
-
         try {
             foreach ($iterator as $entryWithEvent) {
                 $event = $entryWithEvent->getEvent();
