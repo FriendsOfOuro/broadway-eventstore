@@ -11,7 +11,6 @@ use Broadway\EventStore\EventStreamNotFoundException;
 use EventStore\EventStoreInterface;
 use EventStore\Exception\StreamNotFoundException;
 use EventStore\Exception\WrongExpectedVersionException;
-use EventStore\StreamFeed\Entry;
 use EventStore\WritableEvent;
 use EventStore\WritableEventCollection;
 
@@ -112,28 +111,5 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
         } catch (WrongExpectedVersionException $e) {
             throw new BroadwayOptimisticLockException($e->getMessage());
         }
-    }
-
-    /**
-     * @param  Entry[] $entries
-     * @return Entry[]
-     */
-    private function sortEntries(array $entries)
-    {
-        usort(
-            $entries,
-            function ($a, $b) {
-                return $this->getVersion($a) - $this->getVersion($b);
-            }
-        );
-
-        return $entries;
-    }
-
-    private function getVersion(Entry $entry)
-    {
-        $parts = explode('/', $entry->getEventUrl());
-
-        return (int) array_pop($parts);
     }
 }
