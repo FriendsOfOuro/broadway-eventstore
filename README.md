@@ -1,6 +1,7 @@
 EventStore integration for Broadway
 ===================================
 This is a very new project for taking Broadway integration out of main project.
+[![Build Status](https://travis-ci.org/dbellettini/broadway-eventstore.svg?branch=master)](https://travis-ci.org/dbellettini/broadway-eventstore)
 
 Contributing
 ------------
