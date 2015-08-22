@@ -1,11 +1,7 @@
 <?php
 namespace EventStore\Broadway;
 
-use Broadway\Domain\DateTime;
-use Broadway\Domain\DomainEventStream;
 use Broadway\Domain\DomainEventStreamInterface;
-use Broadway\Domain\DomainMessage;
-use Broadway\Domain\Metadata;
 use Broadway\EventStore\EventStoreInterface as BroadwayEventStoreInterface;
 use Broadway\EventStore\EventStreamNotFoundException;
 use EventStore\EventStoreInterface;
@@ -36,32 +32,12 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
         $messages = [];
 
         try {
-            foreach ($iterator as $entryWithEvent) {
-                $event = $entryWithEvent->getEvent();
-
-                $data = $event->getData();
-                $recordedOn = DateTime::fromString($data['broadway_recorded_on']);
-                unset($data['broadway_recorded_on']);
-
-                $messages[] = new DomainMessage(
-                    $id,
-                    $event->getVersion(),
-                    new Metadata($event->getMetadata() ?: []),
-                    call_user_func(
-                        [
-                            $event->getType(),
-                            'deserialize'
-                        ],
-                        $data
-                    ),
-                    $recordedOn
-                );
-            }
+            $iterator->rewind();
         } catch (StreamNotFoundException $e) {
             throw new EventStreamNotFoundException($e->getMessage());
         }
 
-        return new DomainEventStream($messages);
+        return new DomainEventStream($id, $iterator);
     }
 
     /**
