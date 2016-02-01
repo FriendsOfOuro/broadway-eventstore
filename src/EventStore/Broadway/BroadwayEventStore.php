@@ -29,8 +29,6 @@ class BroadwayEventStore implements BroadwayEventStoreInterface
             ->forwardStreamFeedIterator($id)
         ;
 
-        $messages = [];
-
         try {
             $iterator->rewind();
         } catch (StreamNotFoundException $e) {
